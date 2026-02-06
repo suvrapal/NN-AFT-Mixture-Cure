@@ -1,0 +1,303 @@
+# A1. R code for data generation with two covariates
+
+data.Ber.RC = function(n,beta0,beta1,beta2,cens,setting){ 
+  
+  z1 = rnorm(n,mean=0,sd=1) # z1 and z2 are the two continuous covariates generated independently from standard normal distributions
+  z2 = rnorm(n,mean=0,sd=1)
+  
+  
+  piz = rep(NA,n) # this is the uncured probability pi(z)
+  
+  
+  if(setting==1){ # linear classification boundary
+    piz = (exp(0.3-(5*z1)-(3*z2))/(1+exp(0.3-(5*z1)-(3*z2))))
+  }
+  
+  if(setting==2){ # non-linear classification boundary
+    piz =  (exp(0.3-(5*z1*z2)-(3*z1*z2))/(1+exp(0.3-(5*z1*z2)-(3*z1*z2))))
+  }
+  
+  if(setting==3){ # non-linear classification boundary 
+    piz = exp(-exp(0.3-(5*z1*z2)-(3*cos(z2))))
+  }
+  
+  C = runif(n,0,cens) # censoring time 
+  U = runif(n,0,1)
+  Y = rep(NA,n) # observed lifetime
+  D = rep(NA,n) # censoring indicator
+  J = rep(NA,n) # cured indicator (J=0 implies cured)
+  Sp = rep(NA,n) # overall (population) survival function
+  S1 = rep(NA,n) # susceptible survival function
+  S0 = rep(NA,n) # baseline survival function
+  
+  for(i in 1:n){
+    if(U[i]<= 1-piz[i]){
+      Y[i] = C[i]
+      D[i] = 0
+      J[i] = 0
+      Sp[i] = (1-piz[i]) + (piz[i]*exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i]))))))
+      S1[i] = exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i])))))
+      S0[i] = exp(-(Y[i]))
+    }else{
+      T =  rexp(1,rate =exp(-(beta0+(beta1*z1[i])+(beta2*z2[i]))) )
+      Y[i] = min(T,C[i])
+      J[i] = 1
+      Sp[i] = (1-piz[i]) + (piz[i]*exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i]))))))
+      S1[i] = exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i])))))
+      S0[i] = exp(-(Y[i]))
+      if(Y[i]==C[i]){
+        D[i] = 0
+      }else{
+        D[i] = 1
+      }
+    }
+  }
+  return(data.frame(Y,D,z1,z2,J,uncure=piz,Sp=Sp,S1=S1,S0=S0))
+} # function to generate data under 3 different classification boundaries
+
+
+
+
+A2. R code for data generation with ten covariates
+
+library(Rlab)
+
+data.Ber.Aft.RC = function(n,beta0,beta1,beta2,beta3,beta4,beta5,beta6,beta7,beta8,beta9,beta10,cens,setting){ 
+  
+  z1 =rbern(n,prob = 0.4)
+  z2 = rbern(n,prob = 0.3)
+  z3 =rbern(n,prob = 0.6)
+  z4 =rbern(n,prob = 0.8)
+  z5 = rnorm(n,mean=0,sd=1)
+  z6 = rnorm(n,mean=0,sd=1)
+  z7 = rnorm(n,mean=0,sd=1)
+  z8 = rnorm(n,mean=0,sd=1)
+  z9 = rnorm(n,mean=0,sd=1)
+  z10 = rnorm(n,mean=0,sd=1)  
+ 
+  piz = rep(NA,n) # this is the uncured probability pi(z)
+  
+
+  if(setting==4){ # complex classification boundary with high dimension
+    piz = exp(-exp(0.3-5*z5*z6-3*cos(z6)-0.8*z1*z5+1.1*z2*z6+0.5*z3+0.2*z4*z7-1.3*sin(z5*z6)+1.9*cos(z7*z8)-1.5*(z5*z6*z7)-1.6*z7*z8*z9*z10+0.8*(z6*z7)*(z8*z9*z8*z9)+1.8*cos(z5*z6*z7*z8*z9)+1.2*(abs(z6*z7*z8*z9*z10)^0.5)))
+  }
+  
+  C = runif(n,0,cens) # censoring time 
+  U = runif(n,0,1)
+  Y = rep(NA,n) # observed lifetime
+  D = rep(NA,n) # censoring indicator
+  J = rep(NA,n) # cured indicator (J=0 implies cured)
+  Sp = rep(NA,n) # overall (population) survival function
+  S1 = rep(NA,n) # susceptible survival function
+  S0 = rep(NA,n) # baseline survival function
+  
+  for(i in 1:n){
+    if(U[i]<= 1-piz[i]){
+      Y[i] = C[i]
+      D[i] = 0
+      J[i] = 0
+      Sp[i] = (1-piz[i]) + (piz[i]*exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i])+(beta3*z3[i])+(beta4*z4[i])+(beta5*z5[i])+(beta6*z6[i])+(beta7*z7[i])+(beta8*z8[i])+(beta9*z9[i])+(beta10*z10[i]))))))
+      S1[i] = exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i])+(beta3*z3[i])+(beta4*z4[i])+(beta5*z5[i])+(beta6*z6[i])+(beta7*z7[i])+(beta8*z8[i])+(beta9*z9[i])+(beta10*z10[i])))))
+      S0[i] = exp(-(Y[i]))
+    }else{
+      T =  rexp(1,rate =exp(-(beta0+(beta1*z1[i])+(beta2*z2[i])+(beta3*z3[i])+(beta4*z4[i])+(beta5*z5[i])+(beta6*z6[i])+(beta7*z7[i])+(beta8*z8[i])+(beta9*z9[i])+(beta10*z10[i]))) )
+      Y[i] = min(T,C[i])
+      J[i] = 1
+      Sp[i] = (1-piz[i]) + (piz[i]*exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i])+(beta3*z3[i])+(beta4*z4[i])+(beta5*z5[i])+(beta6*z6[i])+(beta7*z7[i])+(beta8*z8[i])+(beta9*z9[i])+(beta10*z10[i]))))))
+      S1[i] = exp(-(Y[i]*exp(-(beta0+(beta1*z1[i])+(beta2*z2[i])+(beta3*z3[i])+(beta4*z4[i])+(beta5*z5[i])+(beta6*z6[i])+(beta7*z7[i])+(beta8*z8[i])+(beta9*z9[i])+(beta10*z10[i])))))
+      S0[i] = exp(-(Y[i]))
+      if(Y[i]==C[i]){
+        D[i] = 0
+      }else{
+        D[i] = 1
+      }
+    }
+  }
+  return(data.frame(Y,D,z1,z2,z3,z4,z5,z6,z7,z8,z9,z10,J,uncure=piz,Sp=Sp,S1=S1,S0=S0))
+}
+
+
+
+# A3. R code for computing the measure of error, given the current values of the beta coefficients
+
+library(survival)
+
+smrank <-function(beta,Time,X,n,w,Status){
+  error <- drop(log(Time)-beta%*%t(X))
+  tp <- numeric()     
+  for(i in 1:n){
+    tp[i] <- sum(as.numeric((error[i]-error)<0)*abs(error[i]-error)*w*Status[i])
+  }
+  sum(tp)/n
+}
+
+# A4. R code for estimating the baseline survival function using the Breslow technique
+
+smsurv <-function(Time,Status,X,beta,w,model){    
+  death_point <- sort(unique(subset(Time, Status==1)))
+  if(model=='ph') coxexp <- exp((beta)%*%t(X[,-1]))  
+  lambda <- numeric()
+  event <- numeric()
+  for(i in 1: length(death_point)){
+    event[i] <- sum(Status*as.numeric(Time==death_point[i]))
+    if(model=='ph')  
+      temp <- sum(as.numeric(Time>=death_point[i])*w*drop(coxexp))
+    if(model=='aft')  
+      temp <- sum(as.numeric(Time>=death_point[i])*w)
+    temp1 <- event[i]
+    lambda[i] <- temp1/temp
+  }
+  HHazard <- numeric()
+  for(i in 1:length(Time)){
+    HHazard[i] <- sum(as.numeric(Time[i]>=death_point)*lambda)
+    if(Time[i]>max(death_point))
+      HHazard[i] <- Inf
+    if(Time[i]<min(death_point))
+      HHazard[i] <- 0
+  }
+  survival <- exp(-HHazard)
+  list(survival=survival)
+}
+
+
+
+
+# A5. R code for Neural network-based EM algorithm
+library(neuralnet)
+
+em.nn <-function(Time,Time1,Status,Status1,X,X1,Z,Z1,offsetvar,uncureprob,uncurepred,beta,emmax,eps,data,testdata) # considering proportional hazards structure
+{     
+  w <- Status
+  w1 <- Status1
+  n <- length(Status)
+  m <- length(Status1)
+  
+    if(!is.null(offsetvar)) 
+      Time <- Time/exp(offsetvar)
+    error <- drop(log(Time)-beta%*%t(X))
+    error1 <- drop(log(Time1)-beta%*%t(X1))
+    s <- smsurv(error,Status,X,beta,w,model="aft")$survival
+    s1 <- smsurv(error1,Status1,X1,beta,w1,model="aft")$survival
+  
+  convergence<- 1000;i <-1
+  while (convergence > eps & i < emmax){ 
+    
+      survival <- s
+      survival1 <- s1
+    
+    ## E step 
+    w <- Status+(1-Status)*(uncureprob*survival)/((1-uncureprob)+uncureprob*survival)
+    w1 <- Status1+(1-Status1)*(uncurepred*survival1)/((1-uncurepred)+uncurepred*survival1)
+    ## M step
+    multipleuncureprob=matrix(1:5*n, nrow=n,ncol=5)
+    for (j in 1:n){multipleuncureprob[j,]<-rbinom(5,size = 1,prob=w[j])}
+    uncureprob1<-c(1,1)
+    uncureprob2<-c(1,1)
+    uncureprob3<-c(1,1)
+    uncureprob4<-c(1,1)
+    uncureprob5<-c(1,1)
+    for (j in 1:n){uncureprob1[j]=multipleuncureprob[j,1]}
+    for (j in 1:n){uncureprob2[j]=multipleuncureprob[j,2]}
+    for (j in 1:n){uncureprob3[j]=multipleuncureprob[j,3]}
+    for (j in 1:n){uncureprob4[j]=multipleuncureprob[j,4]}
+    for (j in 1:n){uncureprob5[j]=multipleuncureprob[j,5]}
+    for (j in 1:n){uncureprob1[j]=uncureprob1[j]}
+    for (j in 1:n){uncureprob2[j]=uncureprob2[j]}
+    for (j in 1:n){uncureprob3[j]=uncureprob3[j]}
+    for (j in 1:n){uncureprob4[j]=uncureprob4[j]}
+    for (j in 1:n){uncureprob5[j]=uncureprob5[j]}
+    uncureprob1<-as.factor(uncureprob1)
+    uncureprob2<-as.factor(uncureprob2)
+    uncureprob3<-as.factor(uncureprob3)
+    uncureprob4<-as.factor(uncureprob4)
+    uncureprob5<-as.factor(uncureprob5)
+    update_cureb<-c(1,1)
+    update_pred<-c(1,1)
+    
+    dataa1=data.frame(uncureprob1,Z[,-1])
+    mod1=neuralnet((uncureprob1==1)~z1+z2,data = dataa1, 
+                   hidden=c(6,12),threshold = 0.05,linear.output=FALSE, act.fct = 'logistic',learningrate = 0.0001)
+    proba1=data.frame(probs1=neuralnet::compute(mod1,data)$net.result)
+    cproba1=data.frame(prob1=neuralnet::compute(mod1,testdata)$net.result)
+    
+    update_cureb1<-c(1,1)
+    update_pred1<-c(1,1)
+    for (z in 1:n){update_cureb1[z]<-as.vector(proba1[z,colnames(proba1)=='probs1'])}
+    for (k in 1:m){update_pred1[k]<-as.vector(cproba1[k,colnames(cproba1)=='prob1'])}
+    
+    uncureprob1<-as.numeric(as.character(uncureprob1))
+    
+    dataa2=data.frame(uncureprob2,Z[,-1])
+    mod2=neuralnet((uncureprob2==1)~z1+z2,data = dataa2, 
+                   hidden=c(6,12),threshold = 0.05,linear.output=FALSE, act.fct = 'logistic',learningrate = 0.0001)
+    proba2=data.frame(probs2=neuralnet::compute(mod2,data)$net.result)
+    cproba2=data.frame(prob2=neuralnet::compute(mod2,testdata)$net.result)
+    
+    update_cureb2<-c(1,1)
+    update_pred2<-c(1,1)
+    for (z in 1:n){update_cureb2[z]<-as.vector(proba2[z,colnames(proba2)=='probs2'])}
+    for (k in 1:m){update_pred2[k]<-as.vector(cproba2[k,colnames(cproba2)=='prob2'])}
+    uncureprob2<-as.numeric(as.character(uncureprob2))
+    
+    dataa3=data.frame(uncureprob3,Z[,-1])
+    mod3=neuralnet((uncureprob3==1)~z1+z2,data = dataa3, 
+                   hidden=c(6,12),threshold = 0.05,linear.output=FALSE, act.fct = 'logistic',learningrate = 0.0001)
+    proba3=data.frame(probs3=neuralnet::compute(mod3,data)$net.result)
+    cproba3=data.frame(prob3=neuralnet::compute(mod3,testdata)$net.result)
+    
+    update_cureb3<-c(1,1)
+    update_pred3<-c(1,1)
+    for (z in 1:n){update_cureb3[z]<-as.vector(proba3[z,colnames(proba3)=='probs3'])}
+    for (k in 1:m){update_pred3[k]<-as.vector(cproba3[k,colnames(cproba3)=='prob3'])}
+    uncureprob3<-as.numeric(as.character(uncureprob3))
+    
+    dataa4=data.frame(uncureprob4,Z[,-1])
+    mod4=neuralnet((uncureprob4==1)~z1+z2,data = dataa4, 
+                   hidden=c(6,12),threshold = 0.05,linear.output=FALSE, act.fct = 'logistic',learningrate = 0.0001)
+    proba4=data.frame(probs4=neuralnet::compute(mod4,data)$net.result)
+    cproba4=data.frame(prob4=neuralnet::compute(mod4,testdata)$net.result)
+    
+    update_cureb4<-c(1,1)
+    update_pred4<-c(1,1)
+    for (z in 1:n){update_cureb4[z]<-as.vector(proba4[z,colnames(proba4)=='probs4'])}
+    for (k in 1:m){update_pred4[k]<-as.vector(cproba4[k,colnames(cproba4)=='prob4'])}
+    uncureprob4<-as.numeric(as.character(uncureprob4))
+    
+    dataa5=data.frame(uncureprob5,Z[,-1])
+    mod5=neuralnet((uncureprob5==1)~z1+z2,data = dataa5, 
+                   hidden=c(6,12),threshold = 0.05,linear.output=FALSE, act.fct = 'logistic',learningrate = 0.0001)
+    proba5=data.frame(probs5=neuralnet::compute(mod5,data)$net.result)
+    cproba5=data.frame(prob5=neuralnet::compute(mod5,testdata)$net.result)
+    
+    update_cureb5<-c(1,1)
+    update_pred5<-c(1,1)
+    for (z in 1:n){update_cureb5[z]<-as.vector(proba5[z,colnames(proba5)=='probs5'])}
+    for (k in 1:m){update_pred5[k]<-as.vector(cproba5[k,colnames(cproba5)=='prob5'])}
+    uncureprob5<-as.numeric(as.character(uncureprob5))
+    
+    
+    for (z in 1:n){update_cureb[z]<-(update_cureb1[z]+update_cureb2[z]+update_cureb3[z]+update_cureb4[z]+update_cureb5[z])/5}
+    for (k in 1:m){update_pred[k]<-(update_pred1[k]+update_pred2[k]+update_pred3[k]+update_pred4[k]+update_pred5[k])/5}
+    
+    if(!is.null(offsetvar)) 
+      update_cureb <- as.numeric(eval(parse(text = paste("glm", "(", "w~Z[,-1]+offset(offsetvar)",",family = quasibinomial(link='", link, "'",")",")",sep = "")))$coef)
+  
+      update_beta <- optim(rep(0,ncol(X)), smrank, Time=Time,X=X,n=n,w=w,Status=Status,method="Nelder-Mead",control=list(reltol=0.0001,maxit=500))$par
+      update_s <- smsurv(error,Status,X,beta,w,model="aft")$survival
+      update_s1 <-smsurv(error1,Status1,X1,beta,w1,model="aft")$survival
+
+    convergence<-sum(c(mean(update_cureb)-mean(uncureprob),update_beta-beta)^2)
+    uncureprob <- update_cureb
+    uncurepred <- update_pred
+    beta <- update_beta 
+    s<-update_s
+    s1<-update_s1
+    i <- i+1
+    #print(i)
+  }
+    S1 = s
+    S1.pred<-s1 # survival function of susceptible group
+  Sp = (1-uncureprob)+(uncureprob*S1)
+  em.nn <- list(latencyfit=beta,Uncureprob=uncureprob,Uncurepred=uncurepred,S0=s,S1=S1,S1.pred=S1.pred,Sp=Sp,tau=convergence, Mod1=mod1, Mod2=mod2, Mod3=mod3, Mod4=mod4, Mod5=mod5)
+}
+
